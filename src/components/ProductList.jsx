@@ -45,17 +45,18 @@ export default function ProductList({ apiBaseUrl, refreshKey }) {
   };
 
   return (
-    <section className="panel">
+    <section className="panel" id="product-list-panel">
       <div className="panel-head">
         <div>
-          <p className="section-label">Collection</p>
-          <h3>View all products</h3>
+          <p className="section-label">✦ Collection</p>
+          <h3>Curated Fragrances</h3>
         </div>
         <div className="search-wrap">
           <input
+            id="search-products"
             className="search-input"
             type="text"
-            placeholder="Search by product name..."
+            placeholder="Search fragrances..."
             value={search}
             onChange={handleSearch}
           />
@@ -65,10 +66,12 @@ export default function ProductList({ apiBaseUrl, refreshKey }) {
       {error ? <p className="error-banner">{error}</p> : null}
 
       {loading ? (
-        <div className="state-box">Loading products...</div>
+        <div className="state-box">
+          Discovering exquisite fragrances...
+        </div>
       ) : products.length === 0 ? (
         <div className="state-box">
-          No products match your search yet.
+          No fragrances match your search yet.
         </div>
       ) : (
         <div className="products-grid">

@@ -1,7 +1,37 @@
-import React from "react";
+import React, { useState, useRef } from "react";
+
 export default function ProductCard({ product }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const cardRef = useRef(null);
+
+  /* 3D tilt effect on mouse move */
+  const handleMouseMove = (e) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateX = ((y - centerY) / centerY) * -4;
+    const rotateY = ((x - centerX) / centerX) * 4;
+    cardRef.current.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-8px)`;
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    if (cardRef.current) {
+      cardRef.current.style.transform = "";
+    }
+  };
+
   return (
-    <article className="product-card">
+    <article
+      className="product-card"
+      ref={cardRef}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
       <div className="product-image-wrap">
         <img
           src={product.image}
