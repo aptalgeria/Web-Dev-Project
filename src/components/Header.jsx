@@ -17,7 +17,7 @@ export default function Header({ currentPage, onNavigate, theme, onToggleTheme }
     <header className="topbar" id="main-header">
       <div className="brand">
         <img
-          src="/logo.png"
+          src="/logo.svg"
           alt="Perfume Gate logo"
           className="brand-logo"
         />
