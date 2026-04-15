@@ -115,9 +115,10 @@ button {
 }
 
 .hero {
-  display: grid;
-  grid-template-columns: 1.65fr 1fr;
-  gap: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
   margin-bottom: 18px;
 }
 
@@ -395,6 +396,13 @@ button {
   gap: 18px;
 }
 
+.preview-img {
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 12px;
+  height: 180px;
+  object-fit: cover;
+}
 .product-card {
   border-radius: 24px;
   overflow: hidden;

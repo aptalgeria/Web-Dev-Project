@@ -1,10 +1,11 @@
+import React from "react";
 export default function Header({ currentPage, onNavigate }) {
   return (
     <header className="topbar">
       <div className="brand">
         <span className="brand-mark" aria-hidden="true" />
         <div>
-          <h1>Essence</h1>
+          <h1>Perfume Gate</h1>
           <p>Luxury perfume catalog</p>
         </div>
       </div>

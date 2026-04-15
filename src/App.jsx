@@ -1,3 +1,4 @@
+import React from "react";
 import { useMemo, useState } from "react";
 import Header from "./components/Header";
 import AddProduct from "./components/AddProduct";
@@ -13,15 +14,7 @@ export default function App() {
     text: "Refined catalog experience for your perfume collection.",
   });
 
-  const heroStats = useMemo(
-    () => [
-      { label: "Elegant UI", value: "Luxury" },
-      { label: "Search mode", value: "Live" },
-      { label: "Layout", value: "Cards" },
-    ],
-    []
-  );
-
+  
   const onProductCreated = () => {
     setNotice({
       type: "success",
@@ -43,12 +36,13 @@ export default function App() {
         <section className="hero">
           <div className="hero-copy">
             <p className="eyebrow">Perfume Products Catalog</p>
-            <h2>Minimal, refined, and presentation-ready.</h2>
+            <h2>Welcome to our Perfume Gate</h2>
             <p className="hero-text">
-              A premium frontend for adding and browsing perfume products with a polished
-              luxury look and a live jQuery search flow.
+                Enter a realm of sophistication and sensory elegance.
+                Perfume Gate brings you an exclusive selection of luxurious fragrances, crafted to elevate your identity and define your presence with every note.
+                Experience the essence of true refinement.
             </p>
-
+        
             <div className="hero-actions">
               <button
                 className={`pill-button ${page === "add" ? "active" : ""}`}
@@ -65,14 +59,9 @@ export default function App() {
             </div>
           </div>
 
-          <div className="hero-panel">
-            {heroStats.map((item) => (
-              <div key={item.label} className="stat-card">
-                <span>{item.label}</span>
-                <strong>{item.value}</strong>
-              </div>
-            ))}
-          </div>
+          
+            
+          
         </section>
 
         {notice.text ? (

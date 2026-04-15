@@ -1,182 +1,152 @@
-import { useMemo, useState } from "react";
+import React, { useState } from "react";
 
-const initialForm = {
-  name: "",
-  description: "",
-  price: "",
-  image: "",
-};
+function AddProduct({ onCreated }) {
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    price: "",
+    image: null,
+  });
 
-export default function AddProduct({ apiBaseUrl, onCreated }) {
-  const [form, setForm] = useState(initialForm);
+  const [preview, setPreview] = useState("");
   const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const imagePreview = useMemo(() => form.image.trim(), [form.image]);
-
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    if (error) setError("");
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const validate = () => {
-    if (!form.name.trim() || !form.description.trim() || !form.price.trim() || !form.image.trim()) {
-      return "Please complete all fields.";
-    }
+  const handleImage = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-    const priceValue = Number(form.price);
-    if (Number.isNaN(priceValue) || priceValue <= 0) {
-      return "Price must be a valid number greater than zero.";
-    }
-
-    try {
-      new URL(form.image.trim());
-    } catch {
-      return "Image must be a valid URL.";
-    }
-
-    return "";
+    setForm({ ...form, image: file });
+    setPreview(URL.createObjectURL(file));
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
+    if (!form.name || !form.description || !form.price || !form.image) {
+      setError("All fields are required.");
       return;
     }
 
-    setIsSubmitting(true);
-    setError("");
+    const data = new FormData();
+    data.append("name", form.name);
+    data.append("description", form.description);
+    data.append("price", form.price);
+    data.append("image", form.image);
 
     try {
-      const response = await fetch(`${apiBaseUrl}/products`, {
+      const res = await fetch("http://localhost:3000/products", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.name.trim(),
-          description: form.description.trim(),
-          price: Number(form.price),
-          image: form.image.trim(),
-        }),
+        body: data,
       });
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => null);
-        throw new Error(payload?.message || "Failed to add product.");
-      }
+      if (!res.ok) throw new Error();
 
-      setForm(initialForm);
-      onCreated?.();
+      setForm({
+        name: "",
+        description: "",
+        price: "",
+        image: null,
+      });
+
+      setPreview("");
+      setError("");
+
+      if (onCreated) onCreated();
     } catch (err) {
-      setError(err.message || "Something went wrong.");
-    } finally {
-      setIsSubmitting(false);
+      setError("Error uploading product.");
     }
   };
 
   return (
-    <section className="panel">
+    <div className="panel">
+      {/* HEADER */}
       <div className="panel-head">
         <div>
-          <p className="section-label">New entry</p>
-          <h3>Add a perfume product</h3>
+          <p className="section-label">Create</p>
+          <h3>Add New Perfume</h3>
+          <p className="section-copy">
+            Add a refined fragrance to your catalog with full details and image.
+          </p>
         </div>
-        <p className="section-copy">
-          Keep the form clean and complete to create a polished catalog item.
-        </p>
       </div>
 
+      {/* FORM + PREVIEW */}
       <div className="form-layout">
-        <form className="glass-form" onSubmit={handleSubmit} noValidate>
+        {/* FORM */}
+        <form className="glass-form" onSubmit={handleSubmit}>
+          {error && <div className="error-banner">{error}</div>}
+
           <div className="field">
-            <label htmlFor="name">Product name</label>
+            <label>Name</label>
             <input
-              id="name"
-              name="name"
               type="text"
-              placeholder="e.g. Velvet Bloom"
+              name="name"
               value={form.name}
               onChange={handleChange}
+              placeholder="e.g. Oud Royal"
             />
           </div>
 
           <div className="field">
-            <label htmlFor="description">Description</label>
+            <label>Description</label>
             <textarea
-              id="description"
               name="description"
-              placeholder="A short elegant description..."
-              rows="5"
               value={form.description}
               onChange={handleChange}
+              placeholder="Describe the fragrance..."
             />
           </div>
 
           <div className="two-cols">
             <div className="field">
-              <label htmlFor="price">Price</label>
+              <label>Price</label>
               <input
-                id="price"
-                name="price"
                 type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
+                name="price"
                 value={form.price}
                 onChange={handleChange}
+                placeholder="e.g. 120"
               />
             </div>
 
             <div className="field">
-              <label htmlFor="image">Image URL</label>
-              <input
-                id="image"
-                name="image"
-                type="url"
-                placeholder="https://..."
-                value={form.image}
-                onChange={handleChange}
-              />
+              <label>Image</label>
+              <input type="file" accept="image/*" onChange={handleImage} />
             </div>
           </div>
 
-          {error ? <p className="error-banner">{error}</p> : null}
-
-          <button className="primary-button" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Create Product"}
+          <button type="submit" className="primary-button">
+            Create Product
           </button>
         </form>
 
-        <aside className="preview-card">
-          <p className="preview-label">Live preview</p>
+        {/* PREVIEW */}
+        <div className="preview-card">
+          <p className="preview-label">Preview</p>
 
           <div className="preview-image-wrap">
-            {imagePreview ? (
-              <img
-                src={imagePreview}
-                alt="Product preview"
-                className="preview-image"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
+            {preview ? (
+              <img src={preview} alt="preview" className="preview-image" />
             ) : (
               <div className="preview-placeholder">
-                Add an image URL to see the preview
+                Image preview will appear here
               </div>
             )}
           </div>
 
           <div className="preview-meta">
-            <h4>{form.name || "Product name"}</h4>
-            <p>{form.description || "Description appears here."}</p>
-            <strong>{form.price ? `$${form.price}` : "$0.00"}</strong>
+            <h4>{form.name || "Perfume Name"}</h4>
+            <p>{form.description || "Product description..."}</p>
+            <strong>{form.price ? `$${form.price}` : "$0"}</strong>
           </div>
-        </aside>
+        </div>
       </div>
-    </section>
+    </div>
   );
 }
+
+export default AddProduct;
