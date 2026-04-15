@@ -13,9 +13,3 @@ npm install
 npm run dev
 ```
 
-## Backend expectation
-The frontend expects:
-- `GET http://localhost:3000/products?search=...`
-- `POST http://localhost:3000/products`
-
-The search page updates dynamically using jQuery as required.
