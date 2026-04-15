@@ -1,0 +1,13 @@
+node_modules/
+# On ignore les environnements virtuels Python
+.venv/
+venv/
+ENV/
+
+# On ignore les caches
+**/__pycache__/
+*.pyc
+
+# On ignore les fichiers systèmes
+.DS_Store
+Thumbs.db
