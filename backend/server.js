@@ -26,21 +26,44 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// --- CONNEXION BDD (XAMPP doit être lancé !) ---
-const db = mysql.createConnection({
+// --- CONNEXION BDD (Pool pour plus de stabilité) ---
+// Le Pool gère les reconnexions automatiquement si la BDD tombe ou timeout
+const db = mysql.createPool({
   host: "localhost",
   user: "root",
-  password: "", // Vide par défaut sur XAMPP
-  database: "perfume_db", // Assure-toi d'avoir créé cette DB dans phpMyAdmin
+  password: "",
+  database: "perfume_db",
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-db.connect((err) => {
+// Test de connexion initial
+db.getConnection((err, connection) => {
   if (err) {
-    console.error("❌ Erreur de connexion MySQL :", err.message);
+    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+      console.error("❌ La connexion à MySQL a été perdue.");
+    } else if (err.code === 'ER_CON_COUNT_ERROR') {
+      console.error("❌ Trop de connexions à la base de données.");
+    } else if (err.code === 'ECONNREFUSED') {
+      console.error("❌ Connexion refusée. Vérifie que MySQL/XAMPP est lancé.");
+    } else {
+      console.error("❌ Erreur MySQL :", err.message);
+    }
     return;
   }
-  console.log("✅ Connecté à la base de données MySQL !");
+  if (connection) connection.release();
+  console.log("✅ Pool de connexion MySQL prêt !");
 });
+
+// Helper pour transformer les chemins relatifs en URLs absolues
+const getFullImageUrl = (imagePath) => {
+  if (!imagePath) return "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=800";
+  if (imagePath.startsWith("/uploads")) {
+    return `http://localhost:${PORT}${imagePath}`;
+  }
+  return imagePath;
+};
 
 // --- ROUTE OPTIONNELLE : RECHERCHE DYNAMIQUE ---
 app.get('/api/products/search', (req, res) => {
@@ -59,7 +82,14 @@ app.get('/api/products/search', (req, res) => {
 
     db.query(sql, [searchTerm, startsWith], (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
+        
+        // On transforme les chemins en URLs absolues
+        const fullResults = results.map(item => ({
+            ...item,
+            image_url: getFullImageUrl(item.image_url)
+        }));
+
+        res.json(fullResults);
     });
 });
 
@@ -102,21 +132,21 @@ app.post("/api/products", upload.single("image"), (req, res) => {
   const sql =
     "INSERT INTO perfumes (name, description, price, image_url) VALUES (?, ?, ?, ?)";
 
-  // 4. Exécution de la requête
-  db.query(sql, [name, description, price, image_url], (err, result) => {
-    if (err) {
-      console.error("Erreur lors de l'insertion :", err.message);
-      return res.status(500).json({
-        error: "Erreur serveur lors de l'ajout du produit",
-      });
-    }
+    // 4. Exécution de la requête
+    db.query(sql, [name, description, price, image_url], (err, result) => {
+      if (err) {
+        console.error("Erreur lors de l'insertion :", err.message);
+        return res.status(500).json({
+          error: "Erreur serveur lors de l'ajout du produit",
+        });
+      }
 
-    res.status(201).json({
-      message: "Produit ajouté avec succès !",
-      productId: result.insertId,
-      image_url: image_url
+      res.status(201).json({
+        message: "Produit ajouté avec succès !",
+        productId: result.insertId,
+        image_url: getFullImageUrl(image_url)
+      });
     });
-  });
 });
 // --- ROUTE POUR RÉCUPÉRER TOUS LES PRODUITS ---
 app.get("/api/products", (req, res) => {
@@ -128,13 +158,11 @@ app.get("/api/products", (req, res) => {
       return res.status(500).json({ error: "Erreur serveur" });
     }
     
-    // On transforme les chemins relatifs en URLs absolues si nécessaire
-    const fullResults = results.map(item => {
-      if (item.image_url && item.image_url.startsWith("/uploads")) {
-        return { ...item, image_url: `http://localhost:${PORT}${item.image_url}` };
-      }
-      return item;
-    });
+    // On transforme les chemins relatifs en URLs absolues
+    const fullResults = results.map(item => ({
+        ...item,
+        image_url: getFullImageUrl(item.image_url)
+    }));
 
     res.status(200).json(fullResults);
   });

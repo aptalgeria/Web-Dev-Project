@@ -52,7 +52,7 @@ export default function ProductList({ apiBaseUrl, refreshKey }) {
       <div className="panel-head">
         <div>
           <p className="section-label">✦ Collection</p>
-          <h3>Curated Fragrances</h3>
+          <h3>Available Fragrances</h3>
         </div>
         <div className="search-wrap">
           <input
