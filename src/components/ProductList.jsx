@@ -10,9 +10,12 @@ export default function ProductList({ apiBaseUrl, refreshKey }) {
   const [error, setError] = useState("");
 
   const endpoint = useMemo(() => {
-    const params = new URLSearchParams();
-    if (search.trim()) params.set("search", search.trim());
-    return `${apiBaseUrl}/products${params.toString() ? `?${params.toString()}` : ""}`;
+    if (search.trim()) {
+      const params = new URLSearchParams();
+      params.set("name", search.trim());
+      return `${apiBaseUrl}/products/search?${params.toString()}`;
+    }
+    return `${apiBaseUrl}/products`;
   }, [apiBaseUrl, search]);
 
   const loadProducts = (url) => {

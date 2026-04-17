@@ -1,11 +1,11 @@
 import React, { useState, useRef } from "react";
 
-function AddProduct({ onCreated }) {
+function AddProduct({ apiBaseUrl, onCreated }) {
   const [form, setForm] = useState({
     name: "",
     description: "",
     price: "",
-    image: null,
+    image_url: "",
   });
 
   const [preview, setPreview] = useState("");
@@ -17,33 +17,35 @@ function AddProduct({ onCreated }) {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleImage = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setForm({ ...form, image: file });
-    setPreview(URL.createObjectURL(file));
+  const handleImageUrl = (e) => {
+    const url = e.target.value;
+    setForm({ ...form, image_url: url });
+    setPreview(url);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.name || !form.description || !form.price || !form.image) {
+    if (!form.name || !form.description || !form.price || !form.image_url) {
       setError("All fields are required to craft a perfume listing.");
       return;
     }
 
     setIsSubmitting(true);
-    const data = new FormData();
-    data.append("name", form.name);
-    data.append("description", form.description);
-    data.append("price", form.price);
-    data.append("image", form.image);
+    const data = {
+      name: form.name,
+      description: form.description,
+      price: form.price,
+      image_url: form.image_url,
+    };
 
     try {
-      const res = await fetch("http://localhost:3000/products", {
+      const res = await fetch(`${apiBaseUrl}/products`, {
         method: "POST",
-        body: data,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
       });
 
       if (!res.ok) throw new Error();
@@ -52,7 +54,7 @@ function AddProduct({ onCreated }) {
         name: "",
         description: "",
         price: "",
-        image: null,
+        image_url: "",
       });
 
       setPreview("");
@@ -122,12 +124,14 @@ function AddProduct({ onCreated }) {
             </div>
 
             <div className="field">
-              <label htmlFor="product-image">Bottle Image</label>
+              <label htmlFor="product-image">Bottle Image URL</label>
               <input
                 id="product-image"
-                type="file"
-                accept="image/*"
-                onChange={handleImage}
+                type="url"
+                name="image_url"
+                value={form.image_url}
+                onChange={handleImageUrl}
+                placeholder="https://example.com/image.jpg"
               />
             </div>
           </div>

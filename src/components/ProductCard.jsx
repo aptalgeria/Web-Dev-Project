@@ -34,7 +34,7 @@ export default function ProductCard({ product }) {
     >
       <div className="product-image-wrap">
         <img
-          src={product.image}
+          src={product.image_url || product.image}
           alt={product.name}
           className="product-image"
           loading="lazy"

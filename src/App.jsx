@@ -3,7 +3,10 @@ import Header from "./components/Header";
 import AddProduct from "./components/AddProduct";
 import ProductList from "./components/ProductList";
 
-const API_BASE_URL = "http://localhost:3000";
+// API base URL for backend. In development, allow overriding via Vite env var
+// so we can take advantage of a dev proxy (see vite.config.js).
+// Defaults to '/api' which will be proxied to the backend when using the dev server.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 /* ── Floating Gold Particles ── */
 function ParticleCanvas() {
