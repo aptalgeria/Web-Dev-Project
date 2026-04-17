@@ -2,12 +2,29 @@
 const express = require("express"); // Le moteur du serveur
 const mysql = require("mysql2"); // Le traducteur pour MySQL
 const cors = require("cors"); // Le garde du corps (sécurité)
+const multer = require("multer"); // Pour gérer les uploads de fichiers
+const path = require("path"); // Pour gérer les chemins de fichiers
 
 const app = express();
 
 //  MIDDLEWARES (Les réglages)
 app.use(cors()); // Autorise le frontend à parler au backend
 app.use(express.json()); // Permet de lire les données envoyées (JSON)
+app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // Sert les fichiers dans le dossier uploads
+
+// --- CONFIGURATION MULTER (Stockage des images) ---
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    // On crée un nom unique : timestamp + nom d'origine sans espaces
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({ storage: storage });
 
 // --- CONNEXION BDD (XAMPP doit être lancé !) ---
 const db = mysql.createConnection({
@@ -53,27 +70,35 @@ app.get("/", (req, res) => {
 
 // --- LANCEMENT DU SERVEUR ---
 const PORT = 5000;
-// --- ROUTE POUR AJOUTER UN PRODUIT ---
-app.post("/api/products", (req, res) => {
+// --- ROUTE POUR AJOUTER UN PRODUIT (Multipart for image upload) ---
+app.post("/api/products", upload.single("image"), (req, res) => {
   // 1. Récupération des données
-  const { name, description, price, image_url } = req.body;
+  const { name, description, price } = req.body;
+  
+  // L'URL de l'image est soit le fichier uploadé, soit un placeholder s'il n'y a rien
+  let image_url = "";
+  if (req.file) {
+    // On stocke le chemin relatif pour la BDD
+    image_url = `/uploads/${req.file.filename}`;
+  } else {
+    // Si pas de fichier, on peut mettre une image par défaut
+    image_url = "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=800";
+  }
 
-  // 2. Validation de sécurite
-  // On vérifie si le nom existe et s'il n'est pas juste composé d'espaces
+  // 2. Validation de sécurité
   if (!name || name.trim().length < 3) {
     return res.status(400).json({
       error: "Le nom est obligatoire et doit avoir au moins 3 caractères.",
     });
   }
 
-  // On vérifie que le prix est nombre supérieur à zéro
   if (!price || price <= 0) {
     return res.status(400).json({
       error: "Le prix est obligatoire et doit être un nombre positif.",
     });
   }
 
-  // 3. La requête SQL (Prepared Statement pour la sécurité)
+  // 3. La requête SQL
   const sql =
     "INSERT INTO perfumes (name, description, price, image_url) VALUES (?, ?, ?, ?)";
 
@@ -86,10 +111,10 @@ app.post("/api/products", (req, res) => {
       });
     }
 
-    // 5. Réponse de succès
     res.status(201).json({
       message: "Produit ajouté avec succès !",
       productId: result.insertId,
+      image_url: image_url
     });
   });
 });
@@ -102,8 +127,16 @@ app.get("/api/products", (req, res) => {
       console.error("Erreur lors de la récupération :", err);
       return res.status(500).json({ error: "Erreur serveur" });
     }
-    // On renvoie la liste complète des parfums au format JSON
-    res.status(200).json(results);
+    
+    // On transforme les chemins relatifs en URLs absolues si nécessaire
+    const fullResults = results.map(item => {
+      if (item.image_url && item.image_url.startsWith("/uploads")) {
+        return { ...item, image_url: `http://localhost:${PORT}${item.image_url}` };
+      }
+      return item;
+    });
+
+    res.status(200).json(fullResults);
   });
 });
 // --- ROUTE POUR SUPPRIMER UN PRODUIT ---

@@ -5,8 +5,8 @@ function AddProduct({ apiBaseUrl, onCreated }) {
     name: "",
     description: "",
     price: "",
-    image_url: "",
   });
+  const [file, setFile] = useState(null);
 
   const [preview, setPreview] = useState("");
   const [error, setError] = useState("");
@@ -17,35 +17,37 @@ function AddProduct({ apiBaseUrl, onCreated }) {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleImageUrl = (e) => {
-    const url = e.target.value;
-    setForm({ ...form, image_url: url });
-    setPreview(url);
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      // On crée une URL temporaire pour la prévisualisation
+      setPreview(URL.createObjectURL(selectedFile));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.name || !form.description || !form.price || !form.image_url) {
-      setError("All fields are required to craft a perfume listing.");
+    if (!form.name || !form.description || !form.price || !file) {
+      setError("Please include a name, description, price, and a beautiful photo.");
       return;
     }
 
     setIsSubmitting(true);
-    const data = {
-      name: form.name,
-      description: form.description,
-      price: form.price,
-      image_url: form.image_url,
-    };
+    
+    // On utilise FormData pour envoyer le fichier
+    const formData = new FormData();
+    formData.append("name", form.name);
+    formData.append("description", form.description);
+    formData.append("price", form.price);
+    formData.append("image", file); // 'image' correspond au nom attendu par multer sur le serveur
 
     try {
       const res = await fetch(`${apiBaseUrl}/products`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+        // Note: Pas de 'Content-Type' header ici, le navigateur le met automatiquement pour FormData
+        body: formData,
       });
 
       if (!res.ok) throw new Error();
@@ -54,8 +56,8 @@ function AddProduct({ apiBaseUrl, onCreated }) {
         name: "",
         description: "",
         price: "",
-        image_url: "",
       });
+      setFile(null);
 
       setPreview("");
       setError("");
@@ -124,14 +126,14 @@ function AddProduct({ apiBaseUrl, onCreated }) {
             </div>
 
             <div className="field">
-              <label htmlFor="product-image">Bottle Image URL</label>
+              <label htmlFor="product-image">Bottle Photo</label>
               <input
                 id="product-image"
-                type="url"
-                name="image_url"
-                value={form.image_url}
-                onChange={handleImageUrl}
-                placeholder="https://example.com/image.jpg"
+                type="file"
+                name="image"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="file-input"
               />
             </div>
           </div>

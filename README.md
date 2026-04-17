@@ -96,4 +96,4 @@ To run this project locally, follow these steps in order.
 ---
 
 ## 🔒 License
-This project is licensed under the ISC License.
+This project is licensed under the MIT License.
