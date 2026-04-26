@@ -58,7 +58,7 @@ db.getConnection((err, connection) => {
 
 // Helper pour transformer les chemins relatifs en URLs absolues
 const getFullImageUrl = (imagePath) => {
-  if (!imagePath) return "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=800";
+  if (!imagePath) return "/uploads/placeholder.png"; // Local placeholder instead of Unsplash
   if (imagePath.startsWith("/uploads")) {
     return `http://localhost:${PORT}${imagePath}`;
   }
@@ -111,8 +111,8 @@ app.post("/api/products", upload.single("image"), (req, res) => {
     // On stocke le chemin relatif pour la BDD
     image_url = `/uploads/${req.file.filename}`;
   } else {
-    // Si pas de fichier, on peut mettre une image par défaut
-    image_url = "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=800";
+    // If no file, we refer to a local placeholder
+    image_url = "/uploads/placeholder.png";
   }
 
   // 2. Validation de sécurité

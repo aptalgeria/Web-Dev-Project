@@ -14,7 +14,5 @@ CREATE TABLE IF NOT EXISTS perfumes (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Sample data (optional)
-INSERT IGNORE INTO perfumes (name, description, price, image_url) VALUES 
-('Lumière d\'Or', 'A radiant blend of citrus and white jasmine.', 85.00, 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=800'),
-('Nuit Éthérée', 'Mysterious oud and sandalwood with a hint of dark rose.', 120.00, 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=800');
+-- No sample data added to keep everything local. 
+-- Add perfumes via the website interface to use your own images.
